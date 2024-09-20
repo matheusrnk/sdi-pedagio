@@ -1,19 +1,25 @@
 package udesc.trabalho.producer;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import udesc.trabalho.Tag;
 
 public class Car {
-
-    private String plate = "";
-    private boolean payed = false;
+    private String plate;
+    private boolean payed;
     private Tag tag;
 
-    public Car(String plate, boolean payed, Tag tag) {
+    public Car() {
+    }
+
+    @JsonCreator
+    public Car(@JsonProperty("plate") String plate, @JsonProperty("payed") boolean payed, @JsonProperty("tag") Tag tag) {
         this.plate = plate;
         this.payed = payed;
         this.tag = tag;
     }
 
+    // Getters and setters
     public String getPlate() {
         return plate;
     }
@@ -40,7 +46,10 @@ public class Car {
 
     @Override
     public String toString() {
-        return "Car [plate=" + plate + ", payed=" + payed + ", tag=" + tag.getName() + "]";
+        return "Car{" +
+                "plate='" + plate + '\'' +
+                ", payed=" + payed +
+                ", tag=" + tag +
+                '}';
     }
-
 }

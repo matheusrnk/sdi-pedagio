@@ -2,12 +2,10 @@ package udesc.trabalho.consumer;
 
 import java.util.logging.Logger;
 
-import udesc.trabalho.producer.ProducerLogConfig;
-
 public class Server {
     public static void main(String[] args) {
 
-        ProducerLogConfig.setupGlobalFileLogger();
+        ConsumerLogConfig.setupGlobalFileLogger();
 
         Logger logger = Logger.getLogger(Server.class.getName());
         logger.info("Application started.");        
