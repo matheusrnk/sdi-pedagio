@@ -1,10 +1,8 @@
 # *PEDÁGIOS - SDI*
 
-### Descrição visual (alto-nível) do sistema:
+### Visualização alto-nível do sistema:
 
-    ![Alt text](https://raw.githubusercontent.com/matheusrnk/sdi-pedagio/refs/heads/main/systemdesign.svg "a title")
-
-##### Explicação dos componentes:
+![System Design image](https://raw.githubusercontent.com/matheusrnk/sdi-pedagio/refs/heads/main/systemdesign.svg)
 
 ### Como rodar a aplicação?
 
