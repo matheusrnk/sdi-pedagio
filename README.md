@@ -2,7 +2,7 @@
 
 ### Descrição visual (alto-nível) do sistema:
 
-    ![Alt text](systemdesign.svg "a title")
+    ![Alt text](https://raw.githubusercontent.com/matheusrnk/sdi-pedagio/refs/heads/main/systemdesign.svg "a title")
 
 ##### Explicação dos componentes:
 
