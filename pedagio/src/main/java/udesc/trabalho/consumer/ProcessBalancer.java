@@ -50,12 +50,20 @@ public class ProcessBalancer {
                     // Get queues bound to the exchange and their loads
                     Map<String, Integer> queueLoadMap = exchangeMonitor.getQueuesBoundToExchange(EXCHANGE_NAME);
 
+                    if(queueLoadMap.isEmpty()){
+                        continue;
+                    }
+
                     queueLoadMap.forEach((key, value) -> {
                         Tag tag = null;
                         try {
                             tag = findAssociatedTag(key);
                         } catch (Exception e) {
                             e.printStackTrace();
+                        }
+
+                        if(consumers.get(tag) == null) {
+                            System.out.println("This " + key + " does not have a tag! ");
                         }
 
                         if(value > HIGH_LOAD_THRESHOLD) {
@@ -79,7 +87,7 @@ public class ProcessBalancer {
         int pos = 0;
 
         for(Tag t : tags) {
-            if(queueName == t.getRoutingKey()) {break;}
+            if(queueName.equals(t.getRoutingKey())) {break;}
             pos++;
         }
 

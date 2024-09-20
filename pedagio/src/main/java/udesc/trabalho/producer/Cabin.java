@@ -1,13 +1,11 @@
 package udesc.trabalho.producer;
 
+import com.rabbitmq.client.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 
 public class Cabin implements Runnable {
 
@@ -17,6 +15,8 @@ public class Cabin implements Runnable {
     private final int PROCESSING_INTERVAL;
     private volatile boolean running = true;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     public Cabin(int capacity, int processingInterval) {
         this.CAR_QUEUE = new LinkedBlockingQueue<>(capacity);
         this.PROCESSING_INTERVAL = processingInterval;
@@ -24,16 +24,28 @@ public class Cabin implements Runnable {
 
     @Override
     public void run() {
-        while (running) {
-            try {
+        try {
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setHost("localhost");
+            Connection connection = factory.newConnection();
+            Channel channel = connection.createChannel();
+            channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+
+            String replyQueueName = channel.queueDeclare().getQueue();
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String response = new String(delivery.getBody(), "UTF-8");
+                LOGGER.log(Level.INFO, "Received response: {0}", response);
+            };
+            channel.basicConsume(replyQueueName, true, deliverCallback, consumerTag -> {});
+
+            while (running) {
                 Car car = CAR_QUEUE.take();
                 LOGGER.log(Level.INFO, "Processing car: {0}", car);
-                processCar(car);
+                processCar(channel, car, replyQueueName);
                 Thread.sleep(PROCESSING_INTERVAL);
-            } catch (InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "Processing interrupted: {0}", e.getMessage());
-                Thread.currentThread().interrupt();
             }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error in Cabin run: {0}", e.getMessage());
         }
     }
 
@@ -47,24 +59,18 @@ public class Cabin implements Runnable {
         }
     }
 
-    private void processCar(Car car) {
+    private void processCar(Channel channel, Car car, String replyQueueName) {
         try {
-            // arrumar isso aqui depois, pq a conexao nao deve ficar sendo feita toda hora
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost");
-            try (Connection connection = factory.newConnection(); Channel channel = connection.createChannel()) {
-                channel.exchangeDeclare(EXCHANGE_NAME, "direct");
-                channel.basicPublish(EXCHANGE_NAME, car.getTag().getName(), null, car.toString().getBytes());
-                System.out.println(" [x] Sent '" + car + "' with routing key '" + car.getTag().getName() + "'");
-            }
+            String carJson = objectMapper.writeValueAsString(car);
+            AMQP.BasicProperties props = new AMQP.BasicProperties.Builder().replyTo(replyQueueName).build();
+            channel.basicPublish(EXCHANGE_NAME, car.getTag().getRoutingKey(), props, carJson.getBytes("UTF-8"));
+            LOGGER.log(Level.INFO, "Sent car: {0}", carJson);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error sending car message: {0}", e.getMessage());
         }
-        LOGGER.log(Level.INFO, "Finished processing car: {0}", car);
     }
 
     public void stop() {
         running = false;
     }
-
 }

@@ -22,7 +22,11 @@ public class Client
         Thread[] cabinThreads = new Thread[numberOfCabins];
 
         for (int i = 0; i < numberOfCabins; i++) {
-            cabins[i] = new Cabin(queueCapacity, processingInterval);
+            try {
+				cabins[i] = new Cabin(queueCapacity, processingInterval);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
             cabinThreads[i] = new Thread(cabins[i]);
             cabinThreads[i].start();
         }
